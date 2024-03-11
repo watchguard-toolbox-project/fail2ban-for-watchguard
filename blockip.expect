@@ -1,0 +1,34 @@
+#!/usr/bin/expect -f
+
+set host [lindex $argv 0]
+set user [lindex $argv 1]
+set wpass [lindex $argv 2]
+set ip [lindex $argv 3]
+set time [lindex $argv 4]
+
+puts "argc: $argc\n"
+
+if { $argc > 3 } {
+    set timeout 90
+
+    #stty echo
+    spawn ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l $user $host -p 4118
+
+    expect "Password: "
+    send "$wpass\r"
+
+    expect -re "WG(#|>)|WG<master>(#|>)"
+    send "configure\r"
+
+    expect -re ".*?(#|>)"
+    send "ip blocked-site  dynamic $ip expire-after $time\r"
+
+    expect -re ".*?(#|>)"
+    send "exit\r"
+
+    expect -re "WG(#|>)|WG<master>(#|>)"
+    send "exit\r"
+
+    expect eof
+    wait -i -1
+}

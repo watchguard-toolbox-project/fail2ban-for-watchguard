@@ -1,0 +1,29 @@
+#
+# --------------------------------------------------------
+# add the contents of this file to /etc/fail2ban/jail.conf
+# --------------------------------------------------------
+#
+# WatchGuard SSLVPN 
+[wgsslvpn]
+# --------------------------------------------------------
+# edit these parameters
+logpath = /var/log/hosts/10.10.1.11/syslog
+# A host is banned if it has generated "maxretry" during the last "findtime"
+# seconds.
+maxretry = 3
+findtime  = 600
+# a banned host will be granted access after bantime seconds again. 
+# note: 
+#   wgsslvpn uses watchguard blocklist "auto mode".
+#   this can be configured with 
+#           policy manager => setup => 
+#		default site protection => blocked sites
+# note: 
+#    this value is only for "internal" fail2ban use - 
+#    after this  many seconds the next attempt will 
+#    be recognized as new attack
+bantime      = 60
+# --------------------------------------------------------
+# nothing to configure below
+action = wgsslvpn
+enabled  = true
