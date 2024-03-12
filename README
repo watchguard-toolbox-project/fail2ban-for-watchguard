@@ -2,7 +2,7 @@ quick setup
 
 1.	install ubuntu
 2. 	install syslog-ng
-3. 	configure syslog to receive/accept syslog/upd and log to directories
+3. 	configure syslog to receive/accept syslog/udp and log to directories
 	/etc/syslog-ng/syslog-ng.conf:
 -----------snip-------add to syslog-ng.conf--------------------
 source s_net {  tcp(ip(10.10.1.5) port(514));
@@ -15,28 +15,44 @@ log { source(s_net); filter(f_messages); destination(d_net_messages); };
 	restart syslog-ng => service syslog-ng restart
 4.	configure watchguard to log to syslog
 		policy manager => setup => loging => syslog => add syslog host ip 
-5. 	install fail2ban:
+5. 	install logrotate if not done => apt-get logrotate
+6. 	configure logrotate to rotate syslogd-files for remote hosts (see above)
+----------snip---add to /etc/logrotate.d/syslog-ng------------------------
+/var/log/hosts/*/syslog
+{
+        rotate 30
+        daily
+        missingok
+        notifempty
+        compress
+        delaycompress
+        postrotate
+                invoke-rc.d syslog-ng reload > /dev/null
+        endscript
+}
+----------snip---add to /etc/logrotate.d/syslog-ng------------------------
+7. 	install fail2ban:
 	apt-get install fail2ban
-6. 	add the contents of jail.conf-addon to /etc/fail2ban/jail.conf
-7. 	cp action.d-wgsslvpn.conf to /etc/fail2ban/action.d/wgsslvpn.conf
-8. 	cp filter.d-wgsslvpn.conf to /etc/fail2ban/filter.d/wgsslvpn.conf
-9.	cp config.sh-dist to config.sh
-10.	edit config.sh and add correct information: 
+8. 	add the contents of jail.conf-addon to /etc/fail2ban/jail.conf
+9. 	cp action.d-wgsslvpn.conf to /etc/fail2ban/action.d/wgsslvpn.conf
+10.	cp filter.d-wgsslvpn.conf to /etc/fail2ban/filter.d/wgsslvpn.conf
+11.	cp config.sh-dist to config.sh
+12.	edit config.sh and add correct information: 
 	FW = internal ip of firewall (the linux must connect via ssh to this ip)
 	USER = user account to use (must be Device Administrator)
 	PASS = passowrd of account USER
-	TIME = time to ban - format "minute x second y", for example "10 minute 0 second"
-11, 	install this software to /usr/local/fail2ban-for-watchguard/
-12.	restart fail2ban => service fail2ban restart
+	TIME = time to ban - format "minute x second y", for example "minute 3 second 0"
+13, 	install this software to /usr/local/fail2ban-for-watchguard/
+14.	restart fail2ban => service fail2ban restart
 
 theoretically you are good to go now. 
 
 verify: 
-	tail -f /var/log/hosts/yip.of.your.firewll/syslog 
+	tail -f /var/log/hosts/ip.of.your.firewall/syslog 
 	should bring show the live logs of your firewall. 
 
 
-	tail -f /var/log/hosts/yip.of.your.firewll/syslog | grep "SSL"
+	tail -f /var/log/hosts/ip.of.your.firewall/syslog | grep "SSL"
 	should show all SSL VPN Logon lines
 
 	Mar 11 14:44:59 10.10.1.11 M270-NFR-WUE wgcgi[12399]: SSL VPN user foo@Firebox-DB from <ip> was rejected - Unspecified.
